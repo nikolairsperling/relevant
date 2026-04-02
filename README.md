@@ -9,3 +9,5 @@ Diagnostic SaaS that makes social media relevance measurable.
 cd frontend
 npm install
 npm run dev
+
+<!-- deploy 1775135300345 -->
