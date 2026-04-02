@@ -24,12 +24,13 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [data, setData] = useState<OnboardingData>(initialData)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const canProceed = () => {
     if (step === 1) return data.platforms.length > 0
     if (step === 2) return data.role !== null
-    if (step === 3) return true // Profil-Input optional
-    if (step === 4) return true // Freebie optional
+    if (step === 3) return true
+    if (step === 4) return true
     if (step === 5) return data.goals.length > 0
     return false
   }
@@ -44,10 +45,28 @@ export default function OnboardingPage() {
 
   const handleSubmit = async () => {
     setLoading(true)
-    // Analyse starten – im echten System: API-Call
-    // Für jetzt: zu Mock-Dashboard weiterleiten
-    await new Promise((r) => setTimeout(r, 2000))
-    router.push('/analyse/demo')
+    setError('')
+
+    try {
+      const res = await fetch('/api/analyse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+
+      if (res.ok) {
+        const analysis = await res.json()
+        // Store for dashboard
+        sessionStorage.setItem('relevant_analysis', JSON.stringify(analysis))
+        router.push('/dashboard')
+      } else {
+        // Fallback to demo with loading animation
+        router.push('/analyse/demo')
+      }
+    } catch {
+      // Fallback to demo
+      router.push('/analyse/demo')
+    }
   }
 
   const togglePlatform = (p: Platform) => {
@@ -283,13 +302,18 @@ export default function OnboardingPage() {
             </StepSection>
           )}
 
+          {/* Error */}
+          {error && (
+            <p className="text-xs text-red-400 text-center">{error}</p>
+          )}
+
           {/* Navigation */}
           <div className="flex items-center justify-between pt-2">
             <Button
               variant="ghost"
               size="md"
               onClick={() => setStep(Math.max(1, step - 1))}
-              disabled={step === 1}
+              disabled={step === 1 || loading}
             >
               Zurück
             </Button>
@@ -304,6 +328,12 @@ export default function OnboardingPage() {
               {step === TOTAL_STEPS ? 'Analyse starten' : 'Weiter'}
             </Button>
           </div>
+
+          {step === TOTAL_STEPS && (
+            <p className="text-center text-xs text-text-muted">
+              Die KI-Analyse dauert ca. 15–30 Sekunden.
+            </p>
+          )}
         </div>
       </main>
     </div>
