@@ -25,10 +25,26 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  // Auth-Schutz temporaer deaktiviert
-  // if (isProtected && !user) { redirect to /login }
+  const protectedPaths = ['/dashboard', '/onboarding', '/analyse']
+  const isProtected = protectedPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+
+  if (isProtected && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  if (user && request.nextUrl.pathname === '/login') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
+  }
 
   return supabaseResponse
 }
