@@ -121,7 +121,7 @@ export default function PlanPage() {
         <p className="text-center text-xs text-text-muted">
           Monatlich kündbar. Kein Datenverlust. Kein Verkaufsdruck.
           <br />
-          Fragen? Schreib uns: <a href="mailto:hallo@relevant.app" className="underline">hallo@relevant.app</a>
+          Fragen? Schreib uns: <a href="mailto:hello@getrelevant.app" className="underline">hello@getrelevant.app</a>
         </p>
 
       </main>
