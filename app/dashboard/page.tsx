@@ -14,7 +14,6 @@ import { generateMockAnalysis, getScoreDiagnosis } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import type { AnalysisResult } from '@/lib/types'
 import type { User } from '@supabase/supabase-js'
-
 export default function DashboardPage() {
   const router = useRouter()
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null)
@@ -29,7 +28,7 @@ export default function DashboardPage() {
     })
 
     // Load analysis – prefer real result from session
-    const stored = sessionStorage.getItem('relevant_analysis')
+    const stored = localStorage.getItem('relevant_analysis')
     if (stored) {
       try {
         const parsed = JSON.parse(stored)
