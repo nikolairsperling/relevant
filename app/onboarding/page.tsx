@@ -57,10 +57,10 @@ export default function OnboardingPage() {
       if (res.ok) {
         const analysis = await res.json()
         // Store for dashboard
-        sessionStorage.setItem('relevant_analysis', JSON.stringify(analysis))
+        localStorage.setItem('relevant_analysis', JSON.stringify(analysis))
         router.push('/dashboard')
       } else {
-        // Fallback to demo with loading animation
+        // Fallback to demo with lading animation
         router.push('/analyse/demo')
       }
     } catch {
