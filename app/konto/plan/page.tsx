@@ -1,19 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/Button'
 import { PRICING_TIERS } from '@/lib/utils'
+import { CheckoutButton } from '@/components/stripe/CheckoutButton'
+import { createClient } from '@/lib/supabase/client'
 
 export default function PlanPage() {
-  const [currentPlan] = useState('free')
+  const [currentPlan, setCurrentPlan] = useState('free')
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('plan')
+          .eq('id', data.user.id)
+          .single()
+        if (profile?.plan) setCurrentPlan(profile.plan)
+      }
+    })
+  }, [])
 
   return (
     <div className="min-h-screen">
       {/* Topbar */}
       <header className="sticky top-0 z-40 border-b border-border bg-bg/80 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/konto" className="text-sm text-text-secondary hover:text-white transition-colors">
+          <Link href="/konto" className="text-sm text-text-secondary hover:text-white transition-colors flex items-center gap-1">
             ← Zurück zum Konto
           </Link>
           <Link href="/" className="text-sm font-semibold tracking-widest uppercase">
@@ -33,97 +48,81 @@ export default function PlanPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PRICING_TIERS.map((tier) => {
-            const isActive = tier.id === currentPlan
-            const isPro = tier.id === 'pro'
+            const isActive = currentPlan === tier.id
+            const isRecommended = tier.id === 'pro'
 
             return (
               <div
                 key={tier.id}
-                className={`border rounded-xl p-6 space-y-6 flex flex-col relative ${
-                  isPro
-                    ? 'border-white/30 bg-bg-elevated'
-                    : isActive
-                    ? 'border-border bg-bg-elevated'
-                    : 'border-border bg-bg-surface'
+                className={`relative rounded-xl border p-5 flex flex-col gap-4 ${
+                  isActive
+                    ? 'border-white bg-white/5'
+                    : isRecommended
+                    ? 'border-white/30 bg-white/3'
+                    : 'border-border bg-surface'
                 }`}
               >
-                {isPro && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs border border-white/20 bg-bg-elevated px-3 py-0.5 rounded-full text-white/70 whitespace-nowrap">
-                    Empfohlen
-                  </span>
-                )}
                 {isActive && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs border border-border bg-bg-elevated px-3 py-0.5 rounded-full text-text-muted whitespace-nowrap">
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-xs bg-white text-black px-2 py-0.5 rounded-full font-medium">
                     Aktiv
                   </span>
                 )}
+                {isRecommended && !isActive && (
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-xs bg-white/20 text-white px-2 py-0.5 rounded-full font-medium">
+                    Empfohlen
+                  </span>
+                )}
 
-                {/* Header */}
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold">{tier.name}</p>
-                  <div className="flex items-baseline gap-1">
-                    {tier.price === 0 ? (
-                      <span className="text-2xl font-semibold">Kostenlos</span>
-                    ) : (
-                      <>
-                        <span className="text-2xl font-semibold">{tier.price} €</span>
-                        <span className="text-xs text-text-muted">/ Monat</span>
-                      </>
-                    )}
-                  </div>
-                  <p className="text-xs text-text-muted">{tier.description}</p>
+                <div>
+                  <p className="text-sm font-medium text-text-secondary">{tier.name}</p>
+                  <p className="text-2xl font-bold mt-1">
+                    {tier.price === 0 ? 'Kostenlos' : `${tier.price} €`}
+                    {tier.price > 0 && <span className="text-sm font-normal text-text-secondary"> / Monat</span>}
+                  </p>
+                  {tier.description && (
+                    <p className="text-xs text-text-muted mt-1">{tier.description}</p>
+                  )}
                 </div>
 
-                {/* Features */}
-                <ul className="space-y-2 flex-1">
-                  {tier.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-xs text-text-secondary">
-                      <span className="text-text-muted mt-0.5">—</span>
-                      {feature}
+                <ul className="space-y-1.5 flex-1">
+                  {tier.features.map((f, i) => (
+                    <li key={i} className="text-xs text-text-secondary flex items-start gap-1.5">
+                      <span className="text-white/40 mt-0.5">—</span>
+                      {f}
                     </li>
                   ))}
                 </ul>
 
-                {/* CTA */}
-                {isActive ? (
-                  <div className="text-xs text-text-muted text-center py-2 border border-border rounded-md">
-                    Dein aktueller Plan
-                  </div>
-                ) : tier.price === 0 ? (
-                  <Button variant="outline" size="sm" className="w-full" asChild>
-                    <Link href="/onboarding">Kostenlos starten</Link>
-                  </Button>
-                ) : (
-                  <Button
-                    variant={isPro ? 'primary' : 'outline'}
-                    size="sm"
-                    className="w-full"
-                    onClick={() => {
-                      // Stripe integration kommt bald
-                      alert(`Plan "${tier.name}" – Zahlungsintegration kommt in Kürze. Schreib uns: hallo@relevant.app`)
-                    }}
-                  >
-                    {tier.price} € / Monat
-                  </Button>
-                )}
+                <div className="mt-auto">
+                  {isActive ? (
+                    <div className="w-full text-center text-sm text-text-muted py-2">
+                      Dein aktueller Plan
+                    </div>
+                  ) : tier.id === 'free' ? (
+                    <div className="w-full text-center text-sm text-text-muted py-2">
+                      Kostenlos
+                    </div>
+                  ) : (
+                    <CheckoutButton
+                      plan={tier.id as 'starter' | 'pro' | 'agency'}
+                      className="w-full bg-white text-black text-sm font-medium py-2 px-4 rounded-lg hover:bg-white/90 transition-colors disabled:opacity-50"
+                    >
+                      {tier.price} € / Monat
+                    </CheckoutButton>
+                  )}
+                </div>
               </div>
             )
           })}
         </div>
 
-        <div className="text-center space-y-2">
-          <p className="text-xs text-text-muted">
-            Monatlich kündbar. Kein Datenverlust. Kein Verkaufsdruck.
-          </p>
-          <p className="text-xs text-text-muted">
-            Fragen? Schreib uns:{' '}
-            <a href="mailto:hallo@relevant.app" className="text-text-secondary hover:text-white transition-colors">
-              hallo@relevant.app
-            </a>
-          </p>
-        </div>
+        <p className="text-center text-xs text-text-muted">
+          Monatlich kündbar. Kein Datenverlust. Kein Verkaufsdruck.
+          <br />
+          Fragen? Schreib uns: <a href="mailto:hallo@relevant.app" className="underline">hallo@relevant.app</a>
+        </p>
 
       </main>
     </div>
