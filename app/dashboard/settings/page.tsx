@@ -34,79 +34,86 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-6 h-6 rounded-full border-2 border-t-white border-white/20 animate-spin" />
+      <div className="flex items-center justify-center h-48">
+        <div className="w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
-  if (!user) return null
-
   return (
-    <div className="space-y-6 animate-in">
-      <div>
-        <p className="text-xs text-text-muted uppercase tracking-widest">Konto</p>
-        <h1 className="text-2xl font-semibold mt-1">Einstellungen</h1>
-      </div>
+    <div className="max-w-xl mx-auto space-y-6 pb-12">
+      <h1 className="text-xl font-bold tracking-wide">Einstellungen</h1>
 
       {/* Login & Sicherheit */}
-      <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-4">
-        <p className="text-xs text-text-muted uppercase tracking-widest">Login & Sicherheit</p>
-        <div className="space-y-1">
-          <p className="text-xs text-text-muted uppercase tracking-widest">Angemeldet als</p>
-          <p className="text-sm font-medium">{user.email}</p>
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
+        <p className="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Login & Sicherheit</p>
+        <div>
+          <p className="text-xs text-zinc-500 mb-1">E-Mail-Adresse</p>
+          <p className="text-sm text-white font-medium">{user?.email}</p>
         </div>
-        <p className="text-xs text-text-secondary">
-          RELEVANT. verwendet Magic Links – kein Passwort nötig. Du kannst dich juderzeit
-          abmelden und mit deiner E-Mail erneut anmelden.
-        </p>
-        <Button variant="outline" size="sm" onClick={handleLogout} loading={loggingOut}>
-          Jetzt abmelden
+        <div className="bg-zinc-800 rounded-lg p-3">
+          <p className="text-xs text-zinc-400">
+            Du loggst dich per <span className="text-yellow-400">Magic Link</span> ein — kein Passwort nötig.
+            Wir schicken dir einen Login-Link an deine E-Mail.
+          </p>
+        </div>
+        <Button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          variant="outline"
+          className="w-full border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500"
+        >
+          {loggingOut ? 'Abmelden…' : 'Abmelden'}
         </Button>
-      </section>
+      </div>
 
       {/* Plan & Abonnement */}
-      <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-4">
-        <p className="text-xs text-text-muted uppercase tracking-widest">Plan & Abonnement</p>
-        <p className="text-sm text-text-secondary">
-          Du nutzt aktuell den kostenlosen Plan. Upgrade für unbegrenzte Analysen,
-          Hooks, Scripts und wöchentliche Reports.
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
+        <p className="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Plan & Abonnement</p>
+        <p className="text-sm text-zinc-300">
+          Du nutzt aktuell den <span className="text-white font-semibold">kostenlosen Plan</span>.
+          Upgrade für unbegrenzte Analysen, Hooks, Scripts und wöchentliche Reports.
         </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button variant="primary" size="sm" asChild>
-            <Link href="/konto/plan">Plan upgraden</Link>
+        <Link href="/konto/plan">
+          <Button className="w-full bg-white text-black hover:bg-zinc-100 font-semibold">
+            Plan upgraden
           </Button>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/konto">Zur Kontoübersicht</Link>
-          </Button>
-        </div>
-      </section>
+        </Link>
+        <Link href="/konto" className="block text-center text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+          Zur Kontoübersicht
+        </Link>
+      </div>
 
       {/* Benachrichtigungen */}
-      <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-4">
-        <p className="text-xs text-text-muted uppercase tracking-widest">Benachrichtigungen</p>
-        <p className="text-sm text-text-secondary">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-3">
+        <p className="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Benachrichtigungen</p>
+        <p className="text-sm text-zinc-300">
           E-Mail-Benachrichtigungen für neue Features und wöchentliche Analyse-Erinnerungen.
         </p>
-        <p className="text-xs text-text-muted border border-border rounded-md px-3 py-2">
-          Benachrichtigungseinstellungen kommen in der nächsten Version.
-        </p>
-      </section>
+        <div className="bg-zinc-800 rounded-lg p-3">
+          <p className="text-xs text-zinc-500">Benachrichtigungseinstellungen kommen in der nächsten Version.</p>
+        </div>
+      </div>
 
-      {/* Daten */}
-      <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-4">
-        <p className="text-xs text-text-muted uppercase tracking-widest">Deine Daten</p>
-        <p className="text-sm text-text-secondary">
+      {/* Deine Daten */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-3">
+        <p className="text-xs text-zinc-500 uppercase tracking-widest font-semibold">Deine Daten</p>
+        <p className="text-sm text-zinc-300">
           RELEVANT. speichert keine Social-Media-Daten. Deine Analysen bleiben in deinem Browser
           (Session Storage) und werden nicht dauerhaft auf unseren Servern gespeichert.
         </p>
-        <p className="text-xs text-text-muted">
+        <p className="text-xs text-zinc-500">
           Fragen? Schreib uns:{' '}
-          <a href="mailto:hallo@relevant.app" className="text-text-secondary hover:text-white transition-colors">
-            hallo@relevant.app
+          <a href="mailto:hello@getrelevant.app" className="text-yellow-400 hover:underline">
+            hello@getrelevant.app
           </a>
         </p>
-      </section>
+        <div className="flex gap-4 pt-1">
+          <Link href="/datenschutz" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Datenschutz</Link>
+          <Link href="/impressum" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Impressum</Link>
+          <Link href="/agb" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">AGB</Link>
+        </div>
+      </div>
     </div>
   )
 }
