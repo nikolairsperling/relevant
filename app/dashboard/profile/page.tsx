@@ -12,15 +12,25 @@ export default function ProfilePage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [currentPlan, setCurrentPlan] = useState<string>('free')
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) {
         router.replace('/login')
-      } else {
-        setUser(data.user)
+        return
       }
+      setUser(data.user)
+      try {
+        const resp = await fetch('/api/user/plan')
+        if (resp.ok) {
+          const json = await resp.json()
+          if (json.plan) setCurrentPlan(json.plan)
+          if (json.subscription_status) setSubscriptionStatus(json.subscription_status)
+        }
+      } catch (e) {}
       setLoading(false)
     })
   }, [router])
@@ -28,15 +38,16 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w6 h-6 rounded-full border-2 border-t-white border-white/20 animate-spin" />
+        <div className="w-6 h-6 rounded-full border-2 border-t-white border-white/20 animate-spin" />
       </div>
     )
   }
 
   if (!user) return null
 
-  const currentPlan = 'free'
   const currentTier = PRICING_TIERS.find((t) => t.id === currentPlan)
+  const isPaid = currentPlan !== 'free'
+
   const joinedDate = new Date(user.created_at).toLocaleDateString('de-DE', {
     year: 'numeric',
     month: 'long',
@@ -53,7 +64,6 @@ export default function ProfilePage() {
       {/* Account Info */}
       <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-5">
         <p className="text-xs text-text-muted uppercase tracking-widest">Kontodaten</p>
-
         <div className="space-y-4">
           <div className="space-y-1">
             <p className="text-xs text-text-muted uppercase tracking-widest">E-Mail</p>
@@ -74,16 +84,21 @@ export default function ProfilePage() {
       <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-5">
         <div className="flex items-center justify-between">
           <p className="text-xs text-text-muted uppercase tracking-widest">Aktueller Plan</p>
-          <span className="text-xs border border-border px-2 py-0.5 rounded-sm text-text-muted">
-            {currentTier?.name ?? 'Free'}
-          </span>
+          <div className="flex items-center gap-2">
+            {isPaid && (
+              <span className="text-xs bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-sm">
+                Aktiv
+              </span>
+            )}
+            <span className="text-xs border border-border px-2 py-0.5 rounded-sm text-text-muted">
+              {currentTier?.name ?? 'Free'}
+            </span>
+          </div>
         </div>
-
         <div className="space-y-1">
           <p className="text-base font-semibold">{currentTier?.name ?? 'Free'}</p>
           <p className="text-sm text-text-secondary">{currentTier?.description}</p>
         </div>
-
         <ul className="space-y-1.5">
           {currentTier?.features.map((f) => (
             <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
@@ -92,9 +107,10 @@ export default function ProfilePage() {
             </li>
           ))}
         </ul>
-
         <Button variant="primary" size="md" className="w-full" asChild>
-          <Link href="/konto/plan">Plan upgraden</Link>
+          <Link href="/konto/plan">
+            {isPaid ? 'Plan verwalten' : 'Plan upgraden'}
+          </Link>
         </Button>
       </section>
     </div>
