@@ -42,8 +42,21 @@ export default function DashboardPage() {
         // fall through to mock
       }
     }
-    setAnalysis(generateMockAnalysis() as unknown as AnalysisResult)
-    setIsReal(false)
+    // Try DB fallback before showing demo data
+    fetch('/api/user/analysis').then(r => r.ok ? r.json() : null).then(j => {
+      if (j?.analysis) {
+        localStorage.setItem('relevant_analysis', JSON.stringify(j.analysis))
+        setAnalysis(j.analysis)
+        setIsReal(true)
+        fetch('/api/user/plan').then(r => r.ok ? r.json() : null).then(p => { if (p?.plan) setUserPlan(p.plan) })
+      } else {
+        setAnalysis(generateMockAnalysis() as unknown as AnalysisResult)
+        setIsReal(false)
+      }
+    }).catch(() => {
+      setAnalysis(generateMockAnalysis() as unknown as AnalysisResult)
+      setIsReal(false)
+    })
   }, [])
 
   if (!analysis) {
