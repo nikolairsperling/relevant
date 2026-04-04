@@ -19,18 +19,16 @@ export default function KontoPage() {
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) {
-        router.replace('/login')
-        return
-      }
+      if (!data.user) { router.replace('/login'); return }
       setUser(data.user)
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('plan, subscription_status')
-        .eq('id', data.user.id)
-        .single()
-      if (profile?.plan) setCurrentPlan(profile.plan)
-      if (profile?.subscription_status) setSubscriptionStatus(profile.subscription_status)
+      try {
+        const resp = await fetch('/api/user/plan')
+        if (resp.ok) {
+          const json = await resp.json()
+          if (json.plan) setCurrentPlan(json.plan)
+          if (json.subscription_status) setSubscriptionStatus(json.subscription_status)
+        }
+      } catch (e) { /* keep defaults */ }
       setLoading(false)
     })
   }, [router])
@@ -42,41 +40,26 @@ export default function KontoPage() {
     router.push('/login')
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-6 h-6 rounded-full border-2 border-t-white border-white/20 animate-spin" />
-      </div>
-    )
-  }
-
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-6 h-6 rounded-full border-2 border-t-white border-white/20 animate-spin" />
+    </div>
+  )
   if (!user) return null
 
   const currentTier = PRICING_TIERS.find((t) => t.id === currentPlan) ?? PRICING_TIERS[0]
   const isPaid = currentPlan !== 'free' && subscriptionStatus === 'active'
-
-  const joinedDate = new Date(user.created_at).toLocaleDateString('de-DE', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  const joinedDate = new Date(user.created_at).toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' })
 
   return (
     <div className="min-h-screen">
-      {/* Topbar */}
       <header className="sticky top-0 z-40 border-b border-border bg-bg/80 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/dashboard" className="text-sm font-semibold tracking-widest uppercase">
-            RELEVANT<span className="text-text-secondary">.</span>
-          </Link>
-          <Button variant="ghost" size="sm" onClick={handleLogout} loading={loggingOut}>
-            Abmelden
-          </Button>
+          <Link href="/dashboard" className="text-sm font-semibold tracking-widest uppercase">RELEVANT<span className="text-text-secondary">.</span></Link>
+          <Button variant="ghost" size="sm" onClick={handleLogout} loading={loggingOut}>Abmelden</Button>
         </div>
       </header>
-
       <main className="max-w-2xl mx-auto px-6 py-10 space-y-6 animate-in">
-        {/* Profile Section */}
         <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-5">
           <p className="text-xs text-text-muted uppercase tracking-widest">Dein Konto</p>
           <div className="space-y-4">
@@ -94,20 +77,12 @@ export default function KontoPage() {
             </div>
           </div>
         </section>
-
-        {/* Current Plan */}
         <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-5">
           <div className="flex items-center justify-between">
             <p className="text-xs text-text-muted uppercase tracking-widest">Aktueller Plan</p>
             <div className="flex items-center gap-2">
-              <span className="text-xs border border-border px-2 py-0.5 rounded-sm text-text-muted capitalize">
-                {currentTier?.name ?? 'Free'}
-              </span>
-              {isPaid && (
-                <span className="text-xs bg-green-900/40 text-green-400 border border-green-800 px-2 py-0.5 rounded-full">
-                  Aktiv
-                </span>
-              )}
+              <span className="text-xs border border-border px-2 py-0.5 rounded-sm text-text-muted capitalize">{currentTier?.name ?? 'Free'}</span>
+              {isPaid && <span className="text-xs bg-green-900/40 text-green-400 border border-green-800 px-2 py-0.5 rounded-full">Aktiv</span>}
             </div>
           </div>
           <div className="space-y-1">
@@ -117,8 +92,7 @@ export default function KontoPage() {
           <ul className="space-y-1.5">
             {currentTier?.features.map((f) => (
               <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
-                <span className="text-text-muted mt-0.5">—</span>
-                {f}
+                <span className="text-text-muted mt-0.5">—</span>{f}
               </li>
             ))}
           </ul>
@@ -126,29 +100,17 @@ export default function KontoPage() {
             <Link href="/konto/plan">{isPaid ? 'Plan verwalten' : 'Plan upgraden'}</Link>
           </Button>
         </section>
-
-        {/* Actions */}
         <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-4">
           <p className="text-xs text-text-muted uppercase tracking-widest">Aktionen</p>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/dashboard">Zum Dashboard</Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/onboarding">Neue Analyse starten</Link>
-            </Button>
+            <Button variant="outline" size="sm" asChild><Link href="/dashboard">Zum Dashboard</Link></Button>
+            <Button variant="outline" size="sm" asChild><Link href="/onboarding">Neue Analyse starten</Link></Button>
           </div>
         </section>
-
-        {/* Logout Section */}
         <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-4">
           <p className="text-xs text-text-muted uppercase tracking-widest">Sitzung</p>
-          <p className="text-xs text-text-secondary">
-            Du bist als <span className="text-text-primary">{user.email}</span> angemeldet.
-          </p>
-          <Button variant="ghost" size="sm" onClick={handleLogout} loading={loggingOut}>
-            Jetzt abmelden
-          </Button>
+          <p className="text-xs text-text-secondary">Du bist als <span className="text-text-primary">{user.email}</span> angemeldet.</p>
+          <Button variant="ghost" size="sm" onClick={handleLogout} loading={loggingOut}>Jetzt abmelden</Button>
         </section>
       </main>
     </div>
