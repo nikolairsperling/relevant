@@ -1,6 +1,6 @@
 'use client'
-
 import { useState } from 'react'
+import Link from 'next/link'
 import type { Hook } from '@/lib/types'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -16,9 +16,10 @@ const HOOK_TYPE_LABELS = {
 interface HookListProps {
   hooks: Hook[]
   isLimited?: boolean
+  userPlan?: string
 }
 
-export function HookList({ hooks, isLimited = false }: HookListProps) {
+export function HookList({ hooks, userPlan = 'free' }: HookListProps) {
   const [copied, setCopied] = useState<string | null>(null)
 
   const handleCopy = (id: string, text: string) => {
@@ -27,7 +28,9 @@ export function HookList({ hooks, isLimited = false }: HookListProps) {
     setTimeout(() => setCopied(null), 2000)
   }
 
-  const displayHooks = isLimited ? hooks.slice(0, 5) : hooks
+  const isFree = userPlan === 'free'
+  const visibleHooks = isFree ? hooks.slice(0, 3) : hooks
+  const lockedHooks = isFree ? hooks.slice(3) : []
 
   return (
     <div className="space-y-4">
@@ -40,13 +43,10 @@ export function HookList({ hooks, isLimited = false }: HookListProps) {
             Auf dein Ziel und deine Plattform abgestimmt.
           </p>
         </div>
-        {isLimited && (
-          <Badge variant="default">{hooks.length} total</Badge>
-        )}
+        <Badge variant="default">{hooks.length} total</Badge>
       </div>
-
       <div className="space-y-2">
-        {displayHooks.map((hook) => (
+        {visibleHooks.map((hook) => (
           <div
             key={hook.id}
             className="group border border-border rounded-lg bg-bg-surface p-4 space-y-3 hover:border-text-muted transition-colors"
@@ -71,18 +71,35 @@ export function HookList({ hooks, isLimited = false }: HookListProps) {
             )}
           </div>
         ))}
-      </div>
 
-      {isLimited && hooks.length > 5 && (
-        <div className="border border-border rounded-lg p-4 text-center space-y-2">
-          <p className="text-xs text-text-secondary">
-            Das ist ein Ausschnitt. Relevanz entsteht durch Wiederholung, nicht durch Zufall.
-          </p>
-          <Button variant="outline" size="sm">
-            Zugang freischalten
-          </Button>
-        </div>
-      )}
+        {lockedHooks.length > 0 && (
+          <div className="relative rounded-lg overflow-hidden">
+            <div className="space-y-2 blur-sm pointer-events-none select-none" aria-hidden="true">
+              {lockedHooks.map((hook) => (
+                <div
+                  key={hook.id}
+                  className="border border-border rounded-lg bg-bg-surface p-4 space-y-3"
+                >
+                  <p className="text-sm leading-relaxed">{hook.text}</p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="platform">{PLATFORM_LABELS[hook.platform]}</Badge>
+                    <Badge variant="default">{HOOK_TYPE_LABELS[hook.hookType]}</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-bg/70 backdrop-blur-[1px]">
+              <p className="text-sm font-medium">+{lockedHooks.length} weitere Hooks</p>
+              <p className="text-xs text-text-secondary text-center max-w-xs">
+                Relevanz entsteht durch Wiederholung. Alle Hooks freischalten.
+              </p>
+              <Button variant="primary" size="sm" asChild>
+                <Link href="/konto/plan">Starter freischalten — ab 29 €</Link>
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
