@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 // ─── Score Helpers ─────────────────────────────────────────────────────────
 
 export function getScoreColor(score: number): string {
-  if (score >= 70) return 'text-score-high
+  if (score >= 70) return 'text-score-high'
   if (score >= 40) return 'text-score-mid'
   return 'text-score-low'
 }
