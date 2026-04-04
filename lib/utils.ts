@@ -1,4 +1,4 @@
-'Alles aus Starter',\n      'Bis zu 3 Plattformen',\n      import type { ScoreCategory, Platform, Role, Goal, PricingTier } from './types'
+import type { ScoreCategory, Platform, Role, Goal, PricingTier } from './types'
 
 // ─── Class Merging ─────────────────────────────────────────────────────────
 
@@ -114,8 +114,7 @@ export const PRICING_TIERS: PricingTier[] = [
     price: 29,
     description: 'Für Creator & kleine Accounts',
     features: [
-      '1 Plattform',
-      '1 Profil',
+      'Alles aus Free',
       'Wöchentlicher Relevant Check',
       '30 Hooks / Monat',
       '6 Skripte / Monat',
@@ -137,8 +136,8 @@ export const PRICING_TIERS: PricingTier[] = [
     price: 79,
     description: 'Für Coaches & ernsthafte Creator',
     features: [
+      'Alles aus Starter',
       'Bis zu 3 Plattformen',
-      '1 Profil',
       'Wöchentlicher Relevant Score',
       '100 Hooks / Monat',
       '24 Skripte / Monat',
@@ -161,6 +160,7 @@ export const PRICING_TIERS: PricingTier[] = [
     price: 199,
     description: 'Für Agenturen & Berater mit Kunden',
     features: [
+      'Alles aus Pro',
       '10+ Profile',
       'Alle Plattformen',
       'Teamzugänge',
