@@ -11,17 +11,26 @@ import type { User } from '@supabase/supabase-js'
 export default function KontoPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
+  const [currentPlan, setCurrentPlan] = useState<string>('free')
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) {
         router.replace('/login')
-      } else {
-        setUser(data.user)
+        return
       }
+      setUser(data.user)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan, subscription_status')
+        .eq('id', data.user.id)
+        .single()
+      if (profile?.plan) setCurrentPlan(profile.plan)
+      if (profile?.subscription_status) setSubscriptionStatus(profile.subscription_status)
       setLoading(false)
     })
   }, [router])
@@ -43,8 +52,9 @@ export default function KontoPage() {
 
   if (!user) return null
 
-  const currentPlan = 'free'
-  const currentTier = PRICING_TIERS.find((t) => t.id === currentPlan)
+  const currentTier = PRICING_TIERS.find((t) => t.id === currentPlan) ?? PRICING_TIERS[0]
+  const isPaid = currentPlan !== 'free' && subscriptionStatus === 'active'
+
   const joinedDate = new Date(user.created_at).toLocaleDateString('de-DE', {
     year: 'numeric',
     month: 'long',
@@ -66,11 +76,9 @@ export default function KontoPage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-10 space-y-6 animate-in">
-
         {/* Profile Section */}
         <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-5">
           <p className="text-xs text-text-muted uppercase tracking-widest">Dein Konto</p>
-
           <div className="space-y-4">
             <div className="space-y-1">
               <p className="text-xs text-text-muted uppercase tracking-widest">E-Mail</p>
@@ -91,16 +99,21 @@ export default function KontoPage() {
         <section className="border border-border rounded-xl bg-bg-surface p-6 space-y-5">
           <div className="flex items-center justify-between">
             <p className="text-xs text-text-muted uppercase tracking-widest">Aktueller Plan</p>
-            <span className="text-xs border border-border px-2 py-0.5 rounded-sm text-text-muted">
-              {currentTier?.name ?? 'Free'}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs border border-border px-2 py-0.5 rounded-sm text-text-muted capitalize">
+                {currentTier?.name ?? 'Free'}
+              </span>
+              {isPaid && (
+                <span className="text-xs bg-green-900/40 text-green-400 border border-green-800 px-2 py-0.5 rounded-full">
+                  Aktiv
+                </span>
+              )}
+            </div>
           </div>
-
           <div className="space-y-1">
             <p className="text-base font-semibold">{currentTier?.name ?? 'Free'}</p>
             <p className="text-sm text-text-secondary">{currentTier?.description}</p>
           </div>
-
           <ul className="space-y-1.5">
             {currentTier?.features.map((f) => (
               <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
@@ -109,9 +122,8 @@ export default function KontoPage() {
               </li>
             ))}
           </ul>
-
           <Button variant="primary" size="md" className="w-full" asChild>
-            <Link href="/konto/plan">Plan upgraden</Link>
+            <Link href="/konto/plan">{isPaid ? 'Plan verwalten' : 'Plan upgraden'}</Link>
           </Button>
         </section>
 
@@ -138,7 +150,6 @@ export default function KontoPage() {
             Jetzt abmelden
           </Button>
         </section>
-
       </main>
     </div>
   )
