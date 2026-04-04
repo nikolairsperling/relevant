@@ -1,6 +1,4 @@
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
-import type { ScoreCategory, Platform, Role, Goal, PricingTier } from './types'
+'Alles aus Starter',\n      'Bis zu 3 Plattformen',\n      import type { ScoreCategory, Platform, Role, Goal, PricingTier } from './types'
 
 // ─── Class Merging ─────────────────────────────────────────────────────────
 
