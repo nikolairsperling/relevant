@@ -1,3 +1,5 @@
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 import type { ScoreCategory, Platform, Role, Goal, PricingTier } from './types'
 
 // ─── Class Merging ─────────────────────────────────────────────────────────
