@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [isReal, setIsReal] = useState(false)
+  const [userPlan, setUserPlan] = useState<string>('free')
 
   useEffect(() => {
     // Load user
@@ -34,6 +35,8 @@ export default function DashboardPage() {
         const parsed = JSON.parse(stored)
         setAnalysis(parsed)
         setIsReal(true)
+        // Fetch plan
+        fetch('/api/user/plan').then(r => r.ok ? r.json() : null).then(j => { if (j?.plan) setUserPlan(j.plan) })
         return
       } catch {
         // fall through to mock
@@ -142,7 +145,7 @@ export default function DashboardPage() {
         {/* Freebie */}
         <FreebieCard analysis={analysis.freebieAnalysis} />
 
-        {/* Upgrade CTA */}
+        {/* Upgrade CTA - only for free users */}
         <section className="border border-border rounded-xl p-8 text-center space-y-4">
           <h2 className="text-xl font-semibold">Relevanz ist kein Einmal-Fix.</h2>
           <p className="text-sm text-text-secondary max-w-md mx-auto">
@@ -152,7 +155,7 @@ export default function DashboardPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button variant="primary" size="lg" asChild>
-              <Link href="/konto/plan">Zugang freischalten</Link>
+              {userPlan === 'free' && <Link href="/konto/plan">Zugang freischalten</Link>}
             </Button>
             <Button variant="ghost" size="lg" asChild>
               <Link href="/#preise">Pläne ansehen</Link>
