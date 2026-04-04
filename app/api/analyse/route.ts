@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import type { OnboardingData } from '@/lib/types'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
@@ -131,6 +133,22 @@ Antworte mit diesem JSON-Format:
       createdAt: new Date().toISOString(),
       ...analysis,
     }
+
+
+
+    // Persist to DB for authenticated user
+    try {
+      const cookieStore = await cookies()
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { cookies: { getAll() { return cookieStore.getAll() } } }
+      )
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('profiles').update({ latest_analysis: result }).eq('id', user.id)
+      }
+    } catch { /* non-blocking */ }
 
     return NextResponse.json(result)
   } catch (error) {
